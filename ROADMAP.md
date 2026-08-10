@@ -1,0 +1,39 @@
+# Roadmap
+
+Two running lists, updated as real decisions get made during the build — not written once and forgotten. See `.claude/plans` / conversation history for the full reasoning behind each entry; this file only tracks the *current* state of each decision.
+
+## Confirmed Kipps.AI platform constraints (2026-08-10)
+
+Pulled the real OpenAPI spec from `backend.kipps.ai/api/schema/` and live-tested against the account. These are load-bearing facts, not guesses:
+
+- **No outbound-trigger API exists for either channel.** The documented API surface is bot *configuration* only (create/update Chatbot/Voicebot objects, prompts, webhook URLs). There is no endpoint to place an outbound call or push a message to a specific contact. The Voice Agent appears to be inbound-only (someone calls a Kipps-assigned number, brought in via your own Twilio/Plivo/Telnyx/Exotel account — Kipps doesn't supply numbers itself).
+- **The Chat Agent runs on LiveKit, not plain REST.** Confirmed via a live test (2026-08-10): `POST /kipps/chatbot/{id}/session/` does NOT return a text reply — it returns a LiveKit room token (`livekit_token`, `livekit_url`, `conversation_id`). The actual conversation happens over a real-time LiveKit room joined **client-side** (browser, via the `livekit-client` SDK, `room.registerTextStreamHandler("lk.chat", ...)` / `localParticipant.sendText(text, {topic: "lk.chat"})`) — our backend's only role is minting that session. Still open: how a finished conversation's transcript/lead data reaches our backend (the `lead_webhook_url` field, and/or a "post-session persistence" call the docs vaguely gesture at).
+- **⚠️ The chat agent never actually responds — root cause still unresolved (2026-08-11).** Built the full LiveKit chat widget (`ChatWidget.tsx` + `/api/chat/session`) and live-tested it against the real "Residential Solar" vertical's chatbot. The room connects successfully, but **no agent participant ever joins** — confirmed with `room.remoteParticipants` staying empty for a full 30 seconds after connecting. Checked the chatbot's own state afterward: `total_conversations: 4`, `total_messages_consumed: 4`, but **`total_responses: 0`** across every attempt, and `error: null` (no surfaced failure). The strongest lead is `last_trained_on: null` — this chatbot was created purely via the API and may need an explicit "train" step (only visible/actionable from the Kipps dashboard) before its agent worker will actually engage in a session room. **Needs the user to check the dashboard** for a Train/Publish/Activate action on this chatbot; don't burn more live test messages guessing at this blind. The widget code itself (session mint → LiveKit room join → text stream send/receive) is written and believed correct against the SDK's documented API — the gap is on Kipps' side of activation, not our integration code.
+- **Workflow shape, given the above**: web-chat widget (Kipps Chat Agent, LiveKit-based) qualifies an inbound lead → chat invites them to call a Kipps number → Kipps Voice Agent continues the qualification call → webhook → reasoning pass → Pipeline update → escalate or Gmail follow-up. This still satisfies the hackathon's dual-channel + 3-step-automation + escalation rules; it's the "AI proactively cold-calls the lead" part of the original vision that isn't possible on this platform today.
+- **Chat channel is the web-chat widget, not WhatsApp** — the org is on Kipps' Free plan, which has `whatsapp_integration_allowed: false`. Revisit if the plan is upgraded.
+- **Voice Agent needs a telephony number brought in via Twilio/Plivo/Telnyx/Exotel** (dashboard's Integration + Phone Number pages) — none is connected yet; user is setting up a Twilio trial account.
+- **Auth**: `Authorization: Api-Key <key>` header (not the `Api-Key: <key>` shown in the public docs page) + `X-Organization-ID` header. Base URL `https://backend.kipps.ai`.
+- **Chatbot's real steering field is `instructions`, not `prompt`** — confirmed via a live test create; `prompt` is present on the object but doesn't drive behavior. Leaving `instructions` unset makes Kipps auto-fill a generic default persona.
+- **No confirmed way to delete/soft-delete a Voicebot via API**, and Chatbot's PATCH-by-id returned 401 with the API key (GET/POST both work fine) despite the OpenAPI spec listing the same `ApiKey` security scheme for all three — likely an update/delete-scope restriction on the key that isn't reflected in the spec. **The Free plan has a max-chatbots limit, and the throwaway `__scratch_test_delete_me` Chatbot from verifying the create call used up the one available slot** (confirmed via a 403 `"Max chatbots limit reached for your plan"` when provisioning the real seed vertical) — this was wrong to call harmless. Delete it via the dashboard UI (not possible via API) before creating another. Don't create *any* throwaway Chatbot/Voicebot test resources on this plan going forward — the account's real quota is tiny.
+- Config writes (create/list) don't consume credits — confirmed the org's `available_credits` was unchanged (1050) after the test create.
+
+## Deferred for the hackathon (16 Aug 2026)
+
+Each entry: what was cut, why, what it'd take to pick back up.
+
+| Feature | Why deferred | To resume |
+| --- | --- | --- |
+| Apollo.io-style outbound contact enrichment/prospecting | Legal exposure (personal-data scraping/reselling — ToS violations, India's DPDP Act, GDPR), and unnecessary: the product is inbound-first (leads arrive via WhatsApp/web form/ad/QR/referral already carrying their own contact info) | Would need a licensed data provider + explicit consent/legal review, not a scraper — revisit only if outbound prospecting becomes a real product requirement |
+| HubSpot CRM push | No HubSpot account for the hackathon window; internal Pipeline (kanban) covers the same job for the demo | Add a `lib/crm/hubspot.ts` adapter behind the same Pipeline interface once there's a HubSpot account/API key to test against |
+| Gmail OAuth follow-up (secondary channel) | Not yet built — Kipps Chat Agent ships first as the mandatory channel | Add once the Kipps Chat path is solid; OAuth flow + Gmail API send, reusing the original Deals Machine's approach |
+| Full Analytics charts (brain growth over time, source velocity) | Time — basic counts ship first, trend charts are a polish pass | Add chart components once there's more than a day or two of real data to chart |
+| Company-level enrichment (industry/size from public sources) | Optional stretch, not needed for the core loop to work | Add as a background job on lead creation once the core loop is proven end-to-end |
+
+## Future in-house build targets (post-hackathon, incubator-facing)
+
+Things currently leaning on a third party that should eventually move in-house to reduce dependency risk — this is a forward-looking moat list for the Sarvam.ai and Hack2Skill BITSOM Pitchfest submissions, not hackathon scope. Nothing here should be started until the hackathon MVP ships.
+
+- **Owned company-level enrichment layer** — reduce reliance on any single external contact-data vendor by building a first-party, consent-respecting enrichment pipeline (public company data only, no personal-data scraping).
+- **Owned outbound trigger / lightweight voice-telephony fallback** — Kipps has no API to proactively call or message a lead (confirmed above); a thin Twilio/SIP + WhatsApp Business API layer would restore the "AI proactively reaches out" capability the original vision depends on, independent of Kipps.AI's current platform limits.
+- **Owned analytics/BI layer** — move beyond in-app counters to a real warehouse/BI setup once there's enough call/chat volume to warrant it.
+- **Owned CRM** — the internal Pipeline kanban already avoids a HubSpot dependency; deepen it (custom fields, reporting, team seats) rather than migrating to an external CRM as the product scales.
