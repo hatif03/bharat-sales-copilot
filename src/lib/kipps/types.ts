@@ -1,0 +1,73 @@
+/**
+ * Shapes confirmed against the real OpenAPI spec at
+ * backend.kipps.ai/api/schema/ (fetched 2026-08-10). Chatbot/Voicebot
+ * create+list are fully documented — safe to implement for real.
+ *
+ * The Chat Agent's runtime session was NOT documented in the spec, but a
+ * live test on 2026-08-10 confirmed it: `POST /kipps/chatbot/{id}/session/`
+ * doesn't return a text reply — it returns a LiveKit room token. The actual
+ * conversation happens over a real-time LiveKit room joined *client-side*
+ * (browser, via the `livekit-client` SDK), not through further backend
+ * calls. Our backend's only job is minting that session/token.
+ *
+ * Voice-call triggering is still NOT documented anywhere and remains
+ * stubbed; see KippsAPINotConfirmedError in errors.ts.
+ */
+
+export interface CreateChatbotParams {
+  name: string;
+  /**
+   * The actual system prompt driving behavior — confirmed via a live test
+   * create (2026-08-10): leaving this unset makes Kipps auto-fill a generic
+   * default persona. `prompt` is a separate, mostly-inert field on the same
+   * object; don't rely on it for steering behavior.
+   */
+  instructions?: string;
+  initial_message?: string;
+  /** Kipps POSTs lead-capture events here — point this at our webhook route. */
+  lead_webhook_url?: string;
+  knowledge_base?: string;
+}
+
+export interface Chatbot {
+  id: string;
+  name: string;
+  prompt: string | null;
+  instructions: string | null;
+  initial_message: string | null;
+  lead_webhook_url: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateVoicebotParams {
+  name: string;
+  prompt?: string;
+  user_language?: string;
+  first_message_choice?: "user" | "bot";
+  /** Kipps POSTs call events here — point this at our webhook route. */
+  webhook_url?: string;
+  recording_enabled?: boolean;
+}
+
+export interface Voicebot {
+  id: string;
+  name: string;
+  prompt: string | null;
+  webhook_url: string | null;
+  user_language: string;
+}
+
+/** Confirmed shape of `POST /kipps/chatbot/{id}/session/`'s response. */
+export interface ChatSession {
+  livekitToken: string;
+  livekitUrl: string;
+  conversationId: number;
+  chatbot: {
+    id: string;
+    name: string;
+    initialMessage: string | null;
+  };
+}
+
