@@ -1,26 +1,36 @@
 {
-  "name": "bsc-scaffold",
+  "name": "bharat-sales-copilot",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "design:lint": "designmd lint DESIGN.md",
+    "design:export": "designmd export DESIGN.md --format css-tailwind > src/app/design-tokens.css",
+    "supabase:types": "npx --yes supabase gen types typescript --local | tail -n +2 > src/lib/supabase/types.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.116.0",
+    "@supabase/supabase-js": "^2.112.2",
+    "livekit-client": "^2.21.0",
     "next": "16.3.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@google/design.md": "^0.4.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
+    "playwright": "^1.62.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5"
   }
 }
