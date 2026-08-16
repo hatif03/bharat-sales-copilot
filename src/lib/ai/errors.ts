@@ -6,7 +6,7 @@
 export class AIProviderNotConfiguredError extends Error {
   constructor() {
     super(
-      "ANTHROPIC_API_KEY is not set — no real AI provider is configured. Catch AIProviderNotConfiguredError and fall back to seeded content for this feature."
+      "Neither ANTHROPIC_API_KEY nor GROQ_API_KEY is set — no real AI provider is configured. Catch AIProviderNotConfiguredError and fall back to seeded content for this feature."
     );
     this.name = "AIProviderNotConfiguredError";
   }
