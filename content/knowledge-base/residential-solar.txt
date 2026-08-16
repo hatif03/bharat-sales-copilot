@@ -1,0 +1,48 @@
+RESIDENTIAL SOLAR — TIER-2/3 INDIA
+Knowledge Base: Pricing, Financing, and Subsidy FAQ
+(Reference document for the sales chat/voice agent — grounds answers in real facts instead of guessing.)
+
+## System Sizes & Indicative Pricing (before subsidy)
+
+- 1 kW system: suitable for very small households (1-2 people, minimal AC use). Indicative cost: ₹55,000–₹65,000.
+- 3 kW system: most common for a small family home (2-3 BHK, one AC). Indicative cost: ₹1.6L–₹1.9L.
+- 5 kW system: for larger homes or homes with 2+ ACs. Indicative cost: ₹2.6L–₹3.1L.
+- 10 kW system: for small businesses, large homes, or shared rooftops. Indicative cost: ₹5.2L–₹6L.
+
+Prices vary by panel brand (mono-PERC vs standard), inverter type (string vs microinverter), and mounting structure (RCC roof vs tin/asbestos roof needs extra structure cost). Always confirm current pricing with the installer before quoting a final number — component costs shift with import duty and demand.
+
+## PM Surya Ghar: Muft Bijli Yojana (Central Government Subsidy)
+
+India's central rooftop solar subsidy scheme, launched February 2024, targets 1 crore households nationally.
+
+Subsidy rates for residential rooftop systems:
+- Up to 1 kW: ₹30,000
+- Up to 2 kW: ₹60,000
+- 3 kW and above: ₹78,000 flat (subsidy does not increase further for systems larger than 3kW at the individual household level)
+
+Eligibility basics:
+- Indian citizen, own the property/roof (renters are not eligible — this matches why our ICP excludes renters).
+- Valid electricity connection in the applicant's name.
+- Apply via the national portal (pmsuryaghar.gov.in) with a registered/empanelled vendor.
+
+Important: subsidy rates and eligibility rules are set by the central government and can change. Never quote a subsidy figure as final/guaranteed — always say "as per the current PM Surya Ghar scheme" and suggest confirming the live figure on the portal before the customer commits money.
+
+## EMI / Financing
+
+- Most vendors offer EMI over 3-7 years through partner NBFCs/banks.
+- A typical 3kW system (post-subsidy cost ~₹1L) financed over 5 years usually works out to an EMI that's comparable to or lower than the household's average monthly electricity bill — this is the core pitch: "your solar EMI can be roughly what you already pay in electricity, but you own the asset after the loan ends."
+- Zero/low-down-payment options exist with some financiers but usually carry a slightly higher interest rate.
+- Do not promise a specific EMI amount without the customer's actual system size, roof type, and city — financing terms vary by lender and by season.
+
+## Common Objections & How to Handle Them
+
+- "It's too expensive" → Lead with the subsidy + EMI math, not the sticker price. Ask their current monthly electricity bill first.
+- "What if it doesn't generate enough power?" → Panels are typically warrantied for 25 years at 80%+ output; average Tier-2/3 Indian sunlight conditions support 4-5 units/kW/day.
+- "What about maintenance?" → Rooftop solar needs occasional panel cleaning (dust) — no other regular maintenance. Inverters typically carry a 5-10 year warranty and may need one replacement over 25 years.
+- "I'm renting, not owning" → Politely disqualify — subsidy and long-term ROI both require ownership of the roof.
+
+## Escalation Triggers (hand off to a human specialist)
+
+- Customer asks for a firm, final quote (site survey required — a human needs to schedule this).
+- Customer wants to negotiate price or financing terms.
+- Customer represents a housing society / commercial rooftop (different subsidy tier, group housing societies get an additional ₹18,000/kW for shared facilities up to 500kW total — this needs a specialist, not a first-call answer).
