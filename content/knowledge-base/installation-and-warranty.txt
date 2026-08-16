@@ -1,0 +1,37 @@
+RESIDENTIAL SOLAR — TIER-2/3 INDIA
+Knowledge Base: Installation Process, Warranty & After-Sales FAQ
+(Reference document for the sales chat/voice agent — grounds answers in real facts instead of guessing. Complements the Pricing/Financing/Subsidy FAQ.)
+
+## Installation Timeline
+
+- Site survey: 1-2 days after booking (checks roof type, shading, structural load, electrical panel capacity).
+- Approval + net metering application: 2-4 weeks (varies by state electricity board — this is usually the longest step, not the physical install).
+- Physical installation: 1-3 days for residential systems (1kW-10kW), done by a certified installer crew.
+- Net metering commissioning + inspection: 1-3 weeks after installation, before the system is officially grid-connected and subsidy disbursed.
+- Total time from booking to a fully live, subsidy-disbursed system: typically 6-10 weeks. Always tell customers this upfront — the electrical board approval step is outside the installer's control and is the most common source of delay.
+
+## Warranty Terms
+
+- Solar panels: 25-year performance warranty (guaranteed 80%+ output at year 25), 10-12 year product/manufacturing defect warranty depending on brand.
+- Inverter: 5-10 year warranty depending on brand/type (string inverters typically 5 years, premium brands up to 10). This is the component most likely to need a mid-life replacement — set expectations accordingly, don't imply the whole system is maintenance-free for 25 years.
+- Mounting structure: typically 10 years against rust/structural failure, longer for anodized aluminum vs standard GI structures.
+- Workmanship/installation warranty: usually 1-5 years from the installer directly (separate from manufacturer warranties) — ask the specific installer's terms, don't assume a number.
+
+## Maintenance & After-Sales
+
+- Panel cleaning: recommended every 2-3 months in dusty/low-rainfall areas, less often in high-rainfall regions. Dust buildup can reduce output 10-15% if neglected for months.
+- Monsoon considerations: panels are rated for hail/heavy rain; the bigger monsoon-season risk is reduced output from prolonged cloud cover, not damage — this is expected and normal, not a fault.
+- Inverter monitoring: most systems ship with an app to track daily generation — recommend customers check weekly, not daily, to avoid over-worrying about normal day-to-day weather variance.
+- Annual health check: many installers offer an optional annual paid inspection (cleaning + electrical check) — worth mentioning as an add-on, not a requirement.
+
+## Net Metering (how bill credits actually work)
+
+- Net metering lets excess daytime generation feed back into the grid, credited against nighttime/cloudy-day consumption on the same bill — the customer is not paid cash for excess generation, it offsets future usage.
+- Credits typically carry forward month to month but may be settled/reset annually depending on the state electricity board's policy — don't promise indefinite carry-forward without checking the specific state.
+- The physical meter itself is usually replaced or reconfigured by the electricity board as part of commissioning, not something the customer or installer does independently.
+
+## Escalation Triggers (hand off to a human specialist)
+
+- Customer's roof type or structure is unusual (heritage building, weak/old RCC, shared/disputed rooftop ownership) and needs an engineer's judgment call, not a generic answer.
+- Customer wants a firm installation date commitment — actual scheduling depends on installer crew availability and the local electricity board's queue, which a human needs to check directly.
+- Customer reports an existing installed system underperforming or a warranty claim — this needs a real diagnostic, not phone troubleshooting.
