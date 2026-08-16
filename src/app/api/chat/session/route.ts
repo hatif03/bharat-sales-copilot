@@ -11,9 +11,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const session = await getKippsClient().createChatSession(parsed.data.chatbotId);
-    return NextResponse.json(session);
+    const conversation = await getKippsClient().createConversation(parsed.data.chatbotId);
+    return NextResponse.json(conversation);
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Unknown error" }, { status: 502 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Unknown error" },
+      { status: 502 }
+    );
   }
 }

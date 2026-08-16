@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Room, RoomEvent } from "livekit-client";
+import { useRef, useState } from "react";
 
 interface ChatMessage {
   id: string;
@@ -9,20 +8,13 @@ interface ChatMessage {
   text: string;
 }
 
-const CHAT_TOPIC = "lk.chat";
-
 export function ChatWidget({ chatbotId }: { chatbotId: string }) {
   const [status, setStatus] = useState<"idle" | "connecting" | "connected" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const roomRef = useRef<Room | null>(null);
-
-  useEffect(() => {
-    return () => {
-      roomRef.current?.disconnect();
-    };
-  }, []);
+  const [sending, setSending] = useState(false);
+  const conversationIdRef = useRef<number | null>(null);
 
   async function startChat() {
     setStatus("connecting");
@@ -42,45 +34,53 @@ export function ChatWidget({ chatbotId }: { chatbotId: string }) {
     }
 
     const session = await res.json();
-    const room = new Room();
-    roomRef.current = room;
-
-    room.registerTextStreamHandler(CHAT_TOPIC, (reader, participantInfo) => {
-      reader.readAll().then((text) => {
-        setMessages((prev) => [
-          ...prev,
-          { id: `${participantInfo.identity}-${Date.now()}`, from: "agent", text },
-        ]);
-      });
-    });
-
-    room.on(RoomEvent.Disconnected, () => setStatus("idle"));
-
-    try {
-      await room.connect(session.livekitUrl, session.livekitToken);
-      setStatus("connected");
-      if (session.chatbot.initialMessage) {
-        setMessages([{ id: "initial", from: "agent", text: session.chatbot.initialMessage }]);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to connect to the chat room");
-      setStatus("error");
+    conversationIdRef.current = session.conversationId;
+    setStatus("connected");
+    if (session.initialMessage) {
+      setMessages([{ id: "initial", from: "agent", text: session.initialMessage }]);
+    } else {
+      setMessages([]);
     }
   }
 
   async function sendMessage() {
-    if (!input.trim() || !roomRef.current) return;
-    const text = input;
+    if (!input.trim() || conversationIdRef.current == null || sending) return;
+    const text = input.trim();
     setInput("");
+    setSending(true);
     setMessages((prev) => [...prev, { id: `you-${Date.now()}`, from: "you", text }]);
-    await roomRef.current.localParticipant.sendText(text, { topic: CHAT_TOPIC });
+
+    try {
+      const res = await fetch("/api/chat/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chatbotId,
+          conversationId: conversationIdRef.current,
+          message: text,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(body.error ?? `Reply failed (${res.status})`);
+        return;
+      }
+      setMessages((prev) => [
+        ...prev,
+        { id: `agent-${Date.now()}`, from: "agent", text: body.reply as string },
+      ]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send message");
+    } finally {
+      setSending(false);
+    }
   }
 
   function endChat() {
-    roomRef.current?.disconnect();
-    roomRef.current = null;
+    conversationIdRef.current = null;
     setStatus("idle");
     setMessages([]);
+    setError(null);
   }
 
   return (
@@ -112,18 +112,23 @@ export function ChatWidget({ chatbotId }: { chatbotId: string }) {
             {messages.map((m) => (
               <div
                 key={m.id}
-                className={`max-w-[80%] rounded-md px-sm py-xs font-body-sm text-body-sm ${
+                className={`max-w-[80%] whitespace-pre-wrap rounded-md px-sm py-xs font-body-sm text-body-sm ${
                   m.from === "you" ? "ml-auto bg-primary text-neutral" : "bg-surface text-primary"
                 }`}
               >
                 {m.text}
               </div>
             ))}
+            {sending && (
+              <div className="max-w-[80%] rounded-md bg-surface px-sm py-xs font-body-sm text-body-sm text-secondary">
+                Thinking…
+              </div>
+            )}
           </div>
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              sendMessage();
+              void sendMessage();
             }}
             className="flex gap-sm"
           >
@@ -131,9 +136,14 @@ export function ChatWidget({ chatbotId }: { chatbotId: string }) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type a message…"
-              className="flex-1 rounded-sm border border-border bg-surface px-sm py-xs font-body-md text-body-md text-primary"
+              disabled={sending}
+              className="flex-1 rounded-sm border border-border bg-surface px-sm py-xs font-body-md text-body-md text-primary disabled:opacity-50"
             />
-            <button type="submit" className="rounded-full bg-primary px-md py-xs font-label-caps text-label-caps uppercase text-neutral">
+            <button
+              type="submit"
+              disabled={sending || !input.trim()}
+              className="rounded-full bg-primary px-md py-xs font-label-caps text-label-caps uppercase text-neutral disabled:opacity-50"
+            >
               Send
             </button>
           </form>

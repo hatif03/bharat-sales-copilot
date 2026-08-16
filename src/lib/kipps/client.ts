@@ -1,5 +1,7 @@
 import { KippsAPINotConfirmedError } from "./errors";
 import type {
+  ChatConversation,
+  ChatReply,
   ChatSession,
   Chatbot,
   CreateChatbotParams,
@@ -8,25 +10,39 @@ import type {
 } from "./types";
 
 export interface KippsClient {
-  // Confirmed against the real OpenAPI spec — safe, cheap (config-only, no AI/voice usage).
   createChatbot(params: CreateChatbotParams): Promise<Chatbot>;
   listChatbots(): Promise<Chatbot[]>;
   createVoicebot(params: CreateVoicebotParams): Promise<Voicebot>;
   listVoicebots(): Promise<Voicebot[]>;
 
+  /** Working chat path (2026-08-11): REST conversation + reply. */
+  createConversation(chatbotId: string): Promise<ChatConversation>;
+  sendChatReply(params: {
+    chatbotId: string;
+    conversationId: number;
+    message: string;
+  }): Promise<ChatReply>;
+
   /**
-   * Mints a LiveKit room session for a chatbot — confirmed via a live test
-   * (2026-08-10). The returned token/room is joined *client-side* with the
-   * `livekit-client` SDK; the actual message exchange never touches our
-   * backend again after this call.
+   * LiveKit room mint — connects, but no agent joins. Prefer createConversation
+   * + sendChatReply for product chat.
    */
   createChatSession(chatbotId: string): Promise<ChatSession>;
 
-  // NOT in the documented API surface at all — see KippsAPINotConfirmedError.
-  // Kipps' Voice Agent appears to be inbound-only (someone calls a
-  // Kipps-assigned number) — there is no endpoint to proactively trigger a
-  // call.
   triggerVoiceCall(): Promise<never>;
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 class HttpKippsClient implements KippsClient {
@@ -46,6 +62,50 @@ class HttpKippsClient implements KippsClient {
 
   async listVoicebots(): Promise<Voicebot[]> {
     return this.request<Voicebot[]>("GET", "/speech/voicebot/");
+  }
+
+  async createConversation(chatbotId: string): Promise<ChatConversation> {
+    const raw = await this.request<{
+      id: number;
+      chatbot_id: string;
+    }>("POST", "/v2/kipps/conversation/", { chatbot_id: chatbotId });
+
+    // Pull initial message from the chatbot object when available.
+    let initialMessage: string | null = null;
+    try {
+      const bot = await this.request<Chatbot>("GET", `/kipps/chatbot/${chatbotId}/`);
+      initialMessage = bot.initial_message;
+    } catch {
+      initialMessage = "Hi! How can I help you today?";
+    }
+
+    return {
+      conversationId: raw.id,
+      chatbotId: raw.chatbot_id ?? chatbotId,
+      initialMessage,
+    };
+  }
+
+  async sendChatReply(params: {
+    chatbotId: string;
+    conversationId: number;
+    message: string;
+  }): Promise<ChatReply> {
+    const raw = await this.request<{
+      success: boolean;
+      reply: string;
+      error?: string;
+    }>("POST", "/v2/kipps/reply/", {
+      chatbot_id: params.chatbotId,
+      conversation_id: params.conversationId,
+      message: params.message,
+    });
+
+    if (!raw.success || !raw.reply) {
+      throw new Error(raw.error ?? "Kipps reply failed");
+    }
+
+    return { success: true, reply: stripHtml(raw.reply) };
   }
 
   async createChatSession(chatbotId: string): Promise<ChatSession> {
@@ -79,9 +139,6 @@ class HttpKippsClient implements KippsClient {
     const res = await fetch(this.baseUrl + path, {
       method,
       headers: {
-        // Confirmed from the OpenAPI spec's securitySchemes.ApiKey
-        // (in: header, name: Authorization) — the docs page's bare
-        // `Api-Key: <key>` example is wrong for this API.
         Authorization: `Api-Key ${apiKey}`,
         "Content-Type": "application/json",
         ...(process.env.KIPPS_ORGANIZATION_ID

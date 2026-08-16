@@ -1,17 +1,11 @@
 /**
- * Shapes confirmed against the real OpenAPI spec at
- * backend.kipps.ai/api/schema/ (fetched 2026-08-10). Chatbot/Voicebot
- * create+list are fully documented — safe to implement for real.
+ * Shapes confirmed against backend.kipps.ai (OpenAPI + live tests).
  *
- * The Chat Agent's runtime session was NOT documented in the spec, but a
- * live test on 2026-08-10 confirmed it: `POST /kipps/chatbot/{id}/session/`
- * doesn't return a text reply — it returns a LiveKit room token. The actual
- * conversation happens over a real-time LiveKit room joined *client-side*
- * (browser, via the `livekit-client` SDK), not through further backend
- * calls. Our backend's only job is minting that session/token.
- *
- * Voice-call triggering is still NOT documented anywhere and remains
- * stubbed; see KippsAPINotConfirmedError in errors.ts.
+ * Chat runtime: LiveKit `POST /kipps/chatbot/{id}/session/` connects a room
+ * but the agent worker never joins (total_responses stays 0). The working
+ * path (live-tested 2026-08-11) is REST:
+ *   POST /v2/kipps/conversation/  → conversation id
+ *   POST /v2/kipps/reply/         → HTML reply text
  */
 
 export interface CreateChatbotParams {
@@ -59,7 +53,7 @@ export interface Voicebot {
   user_language: string;
 }
 
-/** Confirmed shape of `POST /kipps/chatbot/{id}/session/`'s response. */
+/** LiveKit session mint — room connects, but agent worker does not join. Kept for reference. */
 export interface ChatSession {
   livekitToken: string;
   livekitUrl: string;
@@ -71,3 +65,15 @@ export interface ChatSession {
   };
 }
 
+/** Working REST chat — `POST /v2/kipps/conversation/`. */
+export interface ChatConversation {
+  conversationId: number;
+  chatbotId: string;
+  initialMessage: string | null;
+}
+
+/** Working REST reply — `POST /v2/kipps/reply/`. */
+export interface ChatReply {
+  reply: string;
+  success: boolean;
+}
