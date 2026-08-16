@@ -24,6 +24,8 @@
 .DS_Store
 .claude/
 *.pem
+/tmp
+/scripts/kipps-*.mjs
 
 # debug
 npm-debug.log*
